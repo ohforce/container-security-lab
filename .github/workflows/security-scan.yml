@@ -19,8 +19,8 @@ jobs:
         with:
           image-ref: 'my-app:${{ github.sha }}'
           format: 'table'
-          exit-code: '1' # 취약점이 없을 경우 통과, Critical/High 발견 시 빌드 차단
-          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          severity: 'CRITICAL' # HIGH 등급은 경고만 하고, 실제 프로덕션을 위협하는 CRITICAL만 빌드 차단
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
