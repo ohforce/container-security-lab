@@ -19,6 +19,5 @@ jobs:
         with:
           image-ref: 'my-app:${{ github.sha }}'
           format: 'table'
-          exit-code: '1' # Critical 취약점 발견 시 빌드 실패(Fail) 처리
-          ignore-unfixed: true
-          severity: 'CRITICAL'
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
