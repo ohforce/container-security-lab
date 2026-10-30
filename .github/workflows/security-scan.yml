@@ -5,13 +5,13 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-scan:
+  build-scan-and-push:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build Docker image
+      - name: Build Docker image for scanning
         run: docker build -t my-app:${{ github.sha }} .
 
       - name: Run Trivy vulnerability scanner
@@ -19,5 +19,25 @@ jobs:
         with:
           image-ref: 'my-app:${{ github.sha }}'
           format: 'table'
-          exit-code: '1' # Critical/High 취약점 발견 시 빌드 실패(Fail) 처리
+          exit-code: '1' # 취약점이 없을 경우 통과, Critical/High 발견 시 빌드 차단
           severity: 'CRITICAL,HIGH'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Push secured image to Amazon ECR
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: my-secure-app
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker tag my-app:${{ github.sha }} $REGISTRY/$REPOSITORY:$IMAGE_TAG
+          docker push $REGISTRY/$REPOSITORY:$IMAGE_TAG
